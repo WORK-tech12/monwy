@@ -32,7 +32,7 @@
     "username": "Ebrahim",
     "phone": "23235345234",
     "password_hash": "1b28c003bf65d769f4898ca400c48be99209d3c295c8a4628e76cf8eb1a09a67",
-    "balance": 5e+18,
+    "balance": 30
     "withdraw_phone": "01557390306"
   },
   {
@@ -51,3 +51,4 @@
   }
 
 ]
+
