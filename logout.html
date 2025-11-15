@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تسجيل الخروج — TikShop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#fff6e0; --accent:#ff9800; --line:#e9c45c; }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:'Cairo', system-ui, sans-serif; background:linear-gradient(180deg,var(--bg) 0%, #ffd26a 100%); color:#222;}
+    .container{max-width:520px; margin:60px auto; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,0.08); overflow:hidden}
+    header{padding:16px; background:var(--accent); color:#fff; font-weight:700}
+    .content{padding:18px; text-align:center}
+    .btn{margin-top:12px; background:var(--accent); color:#fff; border:none; padding:12px; border-radius:10px; width:100%; font-weight:700; cursor:pointer}
+    .note{margin-top:10px; font-size:13px; color:#666}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>تسجيل الخروج</header>
+    <div class="content">
+      <div id="status">هل تريد إنهاء الجلسة الحالية؟</div>
+      <button class="btn" id="logoutBtn">تسجيل الخروج الآن</button>
+      <div class="note"><a href="index.html">العودة للرئيسية</a></div>
+    </div>
+  </div>
+
+  <script>
+    const status = document.getElementById('status');
+    const btn = document.getElementById('logoutBtn');
+    btn.onclick = ()=>{
+      try{
+        localStorage.removeItem('tik_user');
+        try{ localStorage.removeItem('tik_admin'); }catch(e){}
+        status.textContent = 'تم إنهاء الجلسة بنجاح.';
+        btn.disabled = true;
+        setTimeout(()=>{ location.href='index.html'; }, 1200);
+      }catch(e){ status.textContent = 'حدث خطأ أثناء تسجيل الخروج.'; }
+    };
+  </script>
+</body>
+</html>

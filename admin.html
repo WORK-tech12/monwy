@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>لوحة الأدمن — TikShop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#f4f7ff; --accent:#3f51b5; --line:#d9def5; }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:'Cairo', system-ui, sans-serif; background:linear-gradient(180deg,#ffffff 0%, var(--bg) 100%); color:#222;}
+    .container{max-width:720px; margin:40px auto; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,0.08); overflow:hidden}
+    header{padding:16px; background:var(--accent); color:#fff; font-weight:700}
+    .content{padding:18px}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    label{display:block; margin:12px 0 6px}
+    input{width:100%; padding:10px; border:1px solid var(--line); border-radius:10px}
+    .btn{margin-top:12px; background:var(--accent); color:#fff; border:none; padding:12px; border-radius:10px; width:100%; font-weight:700; cursor:pointer}
+    .note{margin-top:10px; font-size:13px; color:#666}
+    .ok{color:#2e7d32}
+    .err{color:#c62828}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>لوحة الأدمن</header>
+    <div class="content">
+      <div class="row">
+        <div>
+          <label>ID المستخدم الذي تريد إيداع رصيد له</label>
+          <input id="userId" placeholder="مثال: 2xxxxxxxxxx" />
+        </div>
+        <div>
+          <label>المبلغ المطلوب إيداعه</label>
+          <input id="amount" type="number" min="1" step="0.01" placeholder="مثال: 150" />
+        </div>
+      </div>
+      <button class="btn" id="depositBtn">تنفيذ الإيداع</button>
+      <div class="note">ملاحظة: المستخدم لا يستطيع إيداع أو سحب لنفسه من هذه الصفحة، هذه الصلاحية للأدمن فقط.</div>
+      <div class="note" id="result"></div>
+      <div class="note"><a href="index.html">العودة للرئيسية</a></div>
+      
+    </div>
+  </div>
+
+  <script>
+    // التحقق من صلاحية الدخول لصفحة الأدمن
+    (function(){
+      try{
+        const flag = localStorage.getItem('tik_admin');
+        if(flag !== '1'){
+          window.location.href = 'login.html';
+        }
+      }catch(e){
+        window.location.href = 'login.html';
+      }
+    })();
+   </script>
+   <script>
+     function pushMail(toId, title, body){
+      let mail=[]; try{ mail=JSON.parse(localStorage.getItem('tik_mail')||'[]'); }catch(e){}
+      mail.push({to:toId, title, body, time:new Date().toISOString()});
+      localStorage.setItem('tik_mail', JSON.stringify(mail));
+    }
+    async function adminDepositById(id, amount){
+      let locals=[]; try{ locals=JSON.parse(localStorage.getItem('tik_users')||'[]'); }catch(e){}
+      let remote=[]; try{ const res=await fetch('users.json'); if(res.ok) remote=await res.json(); }catch(e){}
+      let user = locals.find(u=>u.id===id);
+      if(!user){
+        user = remote.find(u=>u.id===id);
+        if(!user) return {ok:false, json:{error:'user_not_found'}};
+        locals.push(user);
+      }
+      user.balance = (parseFloat(user.balance)||0) + amount;
+      try{ localStorage.setItem('tik_users', JSON.stringify(locals)); }catch(e){}
+      try{ pushMail(id, 'تم الإيداع', 'تم إيداع مبلغ '+amount+' ج.م في حسابك بنجاح.'); }catch(e){}
+      // لا نرسل إشعار للمستخدم عن الإيداع حسب الطلب الأخير
+      const sessRaw = localStorage.getItem('tik_user');
+      if(sessRaw){
+        try{
+          const sess = JSON.parse(sessRaw);
+          if(sess.id===id){
+            localStorage.setItem('tik_user', JSON.stringify({id:user.id, username:user.username, phone:user.phone, balance:user.balance, withdraw_phone:user.withdraw_phone}));
+          }
+        }catch(e){}
+      }
+      return {ok:true, json:{id:user.id, balance:user.balance, username:user.username, phone:user.phone}};
+    }
+    const result = document.getElementById('result');
+    document.getElementById('depositBtn').onclick = async ()=>{
+      const id = (document.getElementById('userId').value||'').trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      if(!id){ result.textContent = 'يرجى إدخال ID صحيح.'; result.className='note err'; return; }
+      if(isNaN(amount) || amount<=0){ result.textContent = 'يرجى إدخال مبلغ صالح.'; result.className='note err'; return; }
+      const {ok, json} = await adminDepositById(id, amount);
+      if(ok){ result.textContent = 'تم الإيداع بنجاح للمستخدم: '+id+'، الرصيد الجديد: '+(json.balance||0); result.className='note ok'; }
+      else{ result.textContent = (json.error==='user_not_found'?'الايدي خطأ':'فشل الإيداع: '+(json.error||'خطأ غير معروف')); result.className='note err'; }
+    };
+    
+   </script>
+</body>
+</html>

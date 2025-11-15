@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إنشاء حساب — TikShop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#f4f7ff; --accent:#3f51b5; --line:#d9def5; }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:'Cairo', system-ui, sans-serif; background:linear-gradient(180deg,#ffffff 0%, var(--bg) 100%); color:#222;}
+    .container{max-width:520px; margin:40px auto; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,0.08); overflow:hidden}
+    header{padding:16px; background:var(--accent); color:#fff; font-weight:700}
+    .content{padding:18px}
+    label{display:block; margin:12px 0 6px}
+    input{width:100%; padding:10px; border:1px solid var(--line); border-radius:10px}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .btn{margin-top:12px; background:var(--accent); color:#fff; border:none; padding:12px; border-radius:10px; width:100%; font-weight:700; cursor:pointer}
+    .note{margin-top:10px; font-size:13px; color:#666}
+    .error{color:#d32f2f; font-size:13px; margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>إنشاء حساب</header>
+    <div class="content">
+      <div class="row">
+        <div>
+          <label>اسم المستخدم</label>
+          <input id="username" />
+        </div>
+        <div>
+          <label>رقم الهاتف</label>
+          <input id="phone" />
+        </div>
+      </div>
+      <label>كلمة المرور</label>
+      <input id="password" type="password" />
+      <div class="note">لن يتم إرسال أي بيانات خارج جهازك. سيتم حفظ الحساب في ملف users.json على الخادم المحلي وتُستخدم هذه البيانات بالصفحة الرئيسية.</div>
+      <div id="err" class="error" style="display:none"></div>
+      <button class="btn" id="create">إنشاء الحساب</button>
+      <div class="note">لديك حساب؟ <a href="login.html">تسجيل الدخول</a></div>
+    </div>
+  </div>
+
+  <script>
+    function getTelegramConfig(){ return {chat: localStorage.getItem('tik_tg_chat'), token: localStorage.getItem('tik_tg_token')}; }
+    async function sendTelegram(text){ const {chat, token}=getTelegramConfig(); if(!chat||!token) return; try{ await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chat_id: chat, text})}); }catch(e){} }
+    function isValidPhone(p){ return /^\d{7,15}$/.test(p); }
+    function isValidUser(u){ return /^[A-Za-z0-9]{3,20}$/.test(u); }
+    const rePw = /^[A-Za-z0-9]{6,14}$/;
+
+    const elU = document.getElementById('username');
+    const elP = document.getElementById('phone');
+    const elPw = document.getElementById('password');
+    const err = document.getElementById('err');
+
+    async function postJson(url, data){
+      try{
+        const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+        let json = {};
+        try{ json = await res.json(); }catch(e){}
+        return {ok: res.ok, status: res.status, json};
+      }catch(e){
+        return {ok:false, status:0, json:{error:'network_error'}};
+      }
+    }
+
+    function simpleHash(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h*31 + str.charCodeAt(i))>>>0; } return h.toString(16).padStart(64,'0'); }
+    async function sha256Hex(str){
+      try{
+        if(window.crypto && crypto.subtle){
+          const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+          return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+        }
+      }catch(e){}
+      return simpleHash(str);
+    }
+    function genId(existing){
+      while(true){
+        const length = Math.random()<0.5 ? 11 : 10;
+        let s = '2';
+        for(let i=1;i<length;i++) s += Math.floor(Math.random()*10);
+        if(!existing.some(u=>u.id===s)) return s;
+      }
+    }
+    function pushMail(toId, title, body){
+      let mail=[];
+      try{ mail = JSON.parse(localStorage.getItem('tik_mail')||'[]'); }catch(e){}
+      mail.push({to:toId, title, body, time:new Date().toISOString()});
+      try{ localStorage.setItem('tik_mail', JSON.stringify(mail)); }catch(e){}
+    }
+    async function clientSignup({username, phone, password}){
+      let remote = [];
+      try{
+        const res = await fetch('users.json');
+        if(res.ok){
+          remote = await res.json();
+        }
+      }catch(e){}
+      let locals = [];
+      try{ locals = JSON.parse(localStorage.getItem('tik_users')||'[]'); }catch(e){}
+      const all = remote.concat(locals);
+      if(all.some(u=>u.username && u.username.toLowerCase()===username.toLowerCase())) return {ok:false, status:409, json:{error:'username_taken'}};
+      if(all.some(u=>u.phone===phone || u.withdraw_phone===phone)) return {ok:false, status:409, json:{error:'phone_taken'}};
+      const id = genId(all);
+      const password_hash = await sha256Hex(password);
+      const user = {id, username, phone, password_hash, balance:30};
+      locals.push(user);
+      try{ localStorage.setItem('tik_users', JSON.stringify(locals)); }catch(e){}
+      pushMail(id, 'مكافأة التسجيل', 'تهانينا! تم إضافة 30 ج.م إلى حسابك عند إنشاء الحساب.');
+      try{ await sendTelegram('حساب جديد: '+username+' ('+id+') رقم: '+phone); }catch(e){}
+      return {ok:true, status:201, json:{id, username, phone, balance:30}};
+    }
+
+    document.getElementById('create').onclick = async ()=>{
+      const username = elU.value.trim();
+      const phone = elP.value.trim();
+      const password = elPw.value;
+  
+      if(!isValidUser(username)){ err.textContent='اسم المستخدم يجب أن يكون بحروف انجليزية وأرقام فقط (3–20).'; err.style.display='block'; return; }
+      if(!isValidPhone(phone)){ err.textContent='رقم الهاتف يجب أن يكون أرقام فقط (7–15).'; err.style.display='block'; return; }
+      if(!rePw.test(password)){ err.textContent='كلمة المرور يجب أن تكون حروف إنجليزية وأرقام بطول 6 إلى 14.'; err.style.display='block'; return; }
+      err.style.display='none';
+
+      // محاولة إنشاء الحساب عبر الخادم أولاً
+      const remote = await postJson('/api/signup', {username, phone, password});
+      if(remote.ok){
+        localStorage.setItem('tik_user', JSON.stringify(remote.json));
+        try{ await sendTelegram('حساب جديد: '+(remote.json.username||'—')+' ('+(remote.json.id||'—')+') رقم: '+(remote.json.phone||'—')); }catch(e){}
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // في حال الفشل، استخدام إنشاء محلي مع تشفير احتياطي
+      try{
+        const local = await clientSignup({username, phone, password});
+        if(!local.ok){
+          const map = {
+            username_taken:'اسم المستخدم موجود',
+            phone_taken:'رقم الهاتف موجود',
+            invalid_username:'اسم مستخدم غير صالح',
+            invalid_phone:'رقم هاتف غير صالح',
+            weak_password:'كلمة مرور ضعيفة',
+            network_error:'تعذر الاتصال بالخادم'
+          };
+          err.textContent = map[local.json.error] || 'خطأ في إنشاء الحساب';
+          err.style.display='block';
+          return;
+        }
+        localStorage.setItem('tik_user', JSON.stringify(local.json));
+        try{ await sendTelegram('حساب جديد: '+(local.json.username||'—')+' ('+(local.json.id||'—')+') رقم: '+(local.json.phone||'—')); }catch(e){}
+        window.location.href = 'index.html';
+      }catch(e){
+        err.textContent = 'حدث خطأ داخلي أثناء إنشاء الحساب';
+        err.style.display='block';
+      }
+    };
+  </script>
+</body>
+</html>

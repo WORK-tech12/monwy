@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>منصة وهمية للطلبات — TikShop Mock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#fff6e0; --bg-2:#ffd26a; --text:#2c2c2c; --muted:#7d7d7d;
+      --accent:#ffc107; --accent-2:#ff9800; --card:#ffffff; --line:#e9c45c;
+    }
+    /* Themes */
+    .theme-gold{ --bg:#fff6e0; --bg-2:#ffd26a; --accent:#ffc107; --accent-2:#ff9800; --line:#e9c45c; }
+    .theme-purple{ --bg:#f7e8ff; --bg-2:#b388ff; --accent:#9c27b0; --accent-2:#7b1fa2; --line:#c9a6ff; }
+    .theme-teal{ --bg:#e8fff7; --bg-2:#5ad8c1; --accent:#009688; --accent-2:#00796b; --line:#94e8d9; }
+
+    *{box-sizing:border-box}
+    body{margin:0; font-family:'Cairo', system-ui, sans-serif; background:linear-gradient(180deg,var(--bg) 0%, var(--bg-2) 100%); color:var(--text); padding-bottom:100px;}    
+    .container{max-width:980px; margin:0 auto; padding:16px;}
+    header.top{display:flex; align-items:center; justify-content:space-between; padding:10px 12px;}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:700;}
+    .logo{width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#000; color:#fff; font-size:14px}
+    .switcher{display:flex; gap:8px}
+    .sw{width:24px; height:24px; border-radius:50%; border:2px solid #fff; cursor:pointer}
+    .sw.gold{background:#ffc107} .sw.purple{background:#9c27b0} .sw.teal{background:#009688}
+
+    .card{background:var(--card); border-radius:14px; box-shadow:0 8px 26px rgba(0,0,0,0.08); overflow:hidden; border:1px solid var(--line)}
+    .card-head{padding:14px; background:linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%); color:#111;}
+    .row{display:flex; gap:12px; flex-wrap:wrap}
+    .col{flex:1 1 240px}
+
+    .profile-top{display:flex; align-items:center; justify-content:space-between}
+    .id{font-weight:700; letter-spacing:.5px}
+    .stars{color:#fff; font-size:18px}
+
+    .metrics{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:12px}
+    .metric{background:#fff; border:1px dashed var(--line); border-radius:10px; padding:10px; text-align:center}
+    .metric .num{font-weight:700; font-size:18px; color:#333}
+    .metric small{color:var(--muted)}
+
+    .actions{display:flex; gap:10px; padding:12px}
+    .btn{flex:1; background:var(--accent); color:#111; border:none; padding:12px; border-radius:10px; font-weight:700; cursor:pointer}
+    .btn.alt{background:#fff; border:2px solid var(--accent-2)}
+
+    .list{padding:8px 12px}
+    .item{display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid var(--line)}
+    .item:last-child{border-bottom:none}
+    .item svg{width:18px; height:18px}
+
+    .float-actions{position:fixed; right:12px; top:120px; display:flex; flex-direction:column; gap:12px}
+    .fab{width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 16px rgba(0,0,0,0.1); background:#fff; border:1px solid var(--line); cursor:pointer}
+
+    .orders{margin-top:16px}
+    table{width:100%; border-collapse:collapse}
+    th,td{padding:10px; border-bottom:1px solid var(--line); text-align:center}
+    .status{padding:6px 10px; border-radius:999px; font-size:12px}
+    .s-pending{background:#fff3cd} .s-paid{background:#d1ffc9} .s-cancel{background:#ffd4d4}
+
+    .bottom-nav{position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); display:flex; justify-content:space-around; padding:8px}
+    .tab{display:flex; flex-direction:column; align-items:center; gap:2px; color:#444; font-size:12px}
+
+    .modal{position:fixed; inset:0; background:rgba(0,0,0,0.35); display:none; align-items:center; justify-content:center}
+    .modal .box{background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; width:92%; max-width:420px; text-align:center}
+    .close{margin-top:10px; background:#eee; border:1px solid var(--line); padding:8px 12px; border-radius:10px; cursor:pointer}
+
+    .field{margin:8px 0; text-align:right}
+    .field label{display:block; margin-bottom:6px; color:#333; font-weight:600}
+    .field input{width:100%; padding:10px; border:1px solid var(--line); border-radius:10px}
+    .actions-inline{display:flex; gap:8px; margin-top:10px}
+    .actions-inline .btn{flex:1}
+
+    @media (max-width:640px){ .metrics{grid-template-columns:repeat(2,1fr)} }
+  </style>
+</head>
+<body class="theme-gold">
+  <div class="container">
+    <header class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">♪</div>
+        <div>Amazon Shop</div>
+      </div>
+      <div class="switcher" aria-label="تغيير الألوان">
+        <div class="sw gold" data-theme="gold" title="ذهبي"></div>
+        <div class="sw purple" data-theme="purple" title="بنفسجي"></div>
+        <div class="sw teal" data-theme="teal" title="أخضر مزرق"></div>
+      </div>
+    </header>
+
+    <!-- Profile & summary card -->
+    <section class="card" aria-label="الملف والملخص">
+      <div class="card-head">
+        <div class="profile-top">
+          <div>
+            <div class="id" id="phoneDisplay">—</div>
+            <div class="id" id="usernameDisplay">—</div>
+          </div>
+          <div class="stars" title="تقييم">
+            ★★★★☆
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="metrics">
+            <div class="metric"><div class="num" id="idDisplay">—</div><small>ID</small></div>
+            <div class="metric"><div class="num" id="statusDisplay">نشط</div><small>الحالة</small></div>
+            <div class="metric"><div class="num" id="reputationDisplay">100</div><small>السمعة</small></div>
+            <div class="metric"><div class="num" id="balanceDisplay">0</div><small>الرصيد</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="withdrawBtn">سحب</button>
+        <button class="btn alt" id="chargeBtn">إيداع</button>
+      </div>
+      <div class="list" aria-label="إعدادات">
+        <div class="item"><span>معلومات الارتباط</span><span>›</span></div>
+        <div class="item"><span>إشعارات الرسائل</span><span>›</span></div>
+        <div class="item"><span>الأسئلة الشائعة</span><span>›</span></div>
+        <div class="item"><span>اللغة</span><span>›</span></div>
+      </div>
+    </section>
+
+    <!-- تم حذف قسم الطلبات من الصفحة الرئيسية -->
+    <div id="logoutArea" style="margin:16px 0; text-align:center; display:none">
+      <a href="logout.html" id="logoutBtn" class="btn" style="display:inline-block; padding:14px 18px; font-size:18px; width:100%; max-width:480px">تسجيل الخروج</a>
+    </div>
+  </div>
+
+  <!-- Floating actions -->
+  <div class="float-actions" aria-label="اختصارات">
+    <button class="fab" data-msg="مركز الطلبات">🛒</button>
+    <button class="fab" data-msg="التنبيهات">🔔</button>
+    <button class="fab" data-msg="الدعم">💬</button>
+    <button class="fab" data-msg="الإحصائيات">📈</button>
+    <button class="fab" data-msg="الإعدادات">⚙️</button>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav" aria-label="التنقل">
+    <a class="tab" href="index.html" title="الرئيسية">🏠<div>الرئيسية</div></a>
+    <a class="tab" href="mail.html" title="البريد">✉️<div>البريد</div></a>
+    <a class="tab" href="sign.html" title="التوقيع">✍️<div>التوقيع</div></a>
+    <a class="tab" href="orders.html" title="طلبات">📦<div>طلبات</div></a>
+  </nav>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="box">
+      <div id="modalText">إشعار النظام</div>
+      <button class="close" id="closeModal">إغلاق</button>
+    </div>
+  </div>
+
+
+  <script>
+    // Theme switcher
+    document.querySelectorAll('.sw').forEach(el=>{
+      el.addEventListener('click',()=>{
+        const t = el.getAttribute('data-theme');
+        document.body.classList.remove('theme-gold','theme-purple','theme-teal');
+        document.body.classList.add('theme-'+t);
+      });
+    });
+
+    // Modal helpers
+    const modal = document.getElementById('modal');
+    const modalText = document.getElementById('modalText');
+    document.getElementById('closeModal').onclick = ()=> modal.style.display='none';
+
+    // Simple POST helper
+    async function apiPost(path, payload){
+      const res = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+      const json = await res.json();
+      if(!res.ok){ throw new Error(json.error || 'error'); }
+      return json;
+    }
+
+    function tErr(code){
+      const m = {
+        invalid_amount:'مبلغ غير صالح',
+        invalid_id:'معرّف غير صالح',
+        user_not_found:'المستخدم غير موجود',
+        missing_withdraw_phone:'رقم هاتف السحب مطلوب',
+        invalid_phone:'رقم هاتف غير صالح',
+        phone_assigned:'رقم الهاتف مسجّل في حساب آخر',
+        phone_locked:'رقم الهاتف مثبت ولا يمكن تغييره',
+        insufficient_balance:'رصيد غير كافٍ'
+      };
+      return m[code] || 'حدث خطأ، حاول لاحقاً';
+    }
+
+    // Displays
+    const usernameDisplay = document.getElementById('usernameDisplay');
+    const phoneDisplay = document.getElementById('phoneDisplay');
+    const idDisplay = document.getElementById('idDisplay');
+    const balanceDisplay = document.getElementById('balanceDisplay');
+
+    // Load user
+    async function loadUser(){
+      // Try local session first
+      const local = localStorage.getItem('tik_user');
+      if(local){
+        try {
+          const user = JSON.parse(local);
+          applyUser(user);
+          return;
+        } catch(e){}
+      }
+      // Fallback: no user
+    }
+    
+    function applyUser(user){
+      const byId = id=>document.getElementById(id);
+      byId('usernameDisplay').textContent = user.username || '—';
+      byId('phoneDisplay').textContent = user.phone || '—';
+      byId('idDisplay').textContent = user.id || '—';
+      byId('balanceDisplay').textContent = (user.balance ?? 0) + ' ج.م';
+      byId('statusDisplay').textContent = user.status || 'نشط';
+      byId('reputationDisplay').textContent = user.reputation || 'جيد';
+    }
+    
+    function saveUser(user){
+      localStorage.setItem('tik_user', JSON.stringify(user));
+    }
+    
+    // Buttons
+    const withdrawBtn = document.getElementById('withdrawBtn');
+    const chargeBtn = document.getElementById('chargeBtn');
+    
+    function showNote(msg){
+      modalText.textContent = msg;
+      modal.style.display = 'flex';
+      setTimeout(()=>{ modal.style.display='none'; }, 3500);
+    }
+    
+    async function phoneTaken(phone, currentId){
+      let remote=[]; try{ const r=await fetch('users.json'); if(r.ok) remote=await r.json(); }catch(e){}
+      let phones=[]; try{ const p=await fetch('phones.json'); if(p.ok) phones=await p.json(); }catch(e){}
+      let locals=[]; try{ locals=JSON.parse(localStorage.getItem('tik_users')||'[]'); }catch(e){}
+      let pLoc=[]; try{ pLoc=JSON.parse(localStorage.getItem('tik_phone_index')||'[]'); }catch(e){}
+      const all=remote.concat(locals);
+      const taken1 = all.some(u=> (u.phone===phone || u.withdraw_phone===phone) && u.id!==currentId);
+      const taken2 = phones.some(x=> x && x.phone===phone && x.id!==currentId);
+      const taken3 = pLoc.some(x=> x && x.phone===phone && x.id!==currentId);
+      return taken1 || taken2 || taken3;
+    }
+    withdrawBtn?.addEventListener('click', ()=>{
+      modalText.innerHTML = '<div>السحب يتم عبر الأدمن فقط</div>'+
+        '<div style="margin-top:10px"><button class="btn" id="contactAdmin">تواصل مع الأدمن</button></div>';
+      modal.style.display = 'flex';
+      setTimeout(()=>{ const c=document.getElementById('contactAdmin'); if(c){ c.onclick=()=>{ modal.style.display='none'; window.open('https://wa.me/201212738757','_blank'); }; } },0);
+    });
+    
+    chargeBtn?.addEventListener('click', ()=>{
+      modalText.innerHTML = '<div>يمكن الإيداع عن طريق المشرف</div><div style="margin-top:10px"><button class="btn" id="confirmDeposit">تأكيد</button></div>';
+      modal.style.display = 'flex';
+      setTimeout(()=>{
+        const c = document.getElementById('confirmDeposit');
+        if(c){ c.onclick = ()=>{ modal.style.display='none'; window.open('https://wa.me/201212738757','_blank'); }; }
+      },0);
+    });
+
+    withdrawBtn?.addEventListener('click', ()=>{
+      let sess=null; try{ const s=localStorage.getItem('tik_user'); if(s) sess=JSON.parse(s); }catch(e){}
+      const locked = !!(sess && (sess.withdraw_phone_locked===true));
+      const existingPhone = (sess && sess.withdraw_phone) ? sess.withdraw_phone : '';
+      const phoneField = locked ? `<input id="w_phone_modal" disabled value="${existingPhone}" style="background:#eee; color:#777" />` : '<input id="w_phone_modal" />';
+      modalText.innerHTML = '<div>سحب</div>'+
+        '<div class="field"><label>رقم الهاتف للسحب</label>'+phoneField+'</div>'+
+        '<div class="field"><label>سحب المبلغ</label><input id="w_amount_modal" type="number" min="100" step="0.01" /></div>'+
+        '<div class="actions-inline"><button class="btn" id="confirmWithdrawModal">تأكيد</button></div>';
+      modal.style.display = 'flex';
+      setTimeout(()=>{
+        const phoneEl=document.getElementById('w_phone_modal');
+        const amtEl=document.getElementById('w_amount_modal');
+        const confirm=document.getElementById('confirmWithdrawModal');
+        confirm?.addEventListener('click', async ()=>{
+          const amt=parseFloat(amtEl?.value||'0');
+          if(isNaN(amt)||amt<100){ modalText.innerHTML+='<div style="color:#c62828; margin-top:8px">الحد الأدنى للسحب 100</div>'; return; }
+          const sessRaw=localStorage.getItem('tik_user');
+          if(!sessRaw){ modalText.innerHTML+='<div style="color:#c62828; margin-top:8px">يرجى تسجيل الدخول أولاً</div>'; return; }
+          const sess2=JSON.parse(sessRaw);
+          let phone = existingPhone;
+          if(!locked){
+            phone=(phoneEl?.value||'').trim();
+            if(!/^\d{7,15}$/.test(phone)){ modalText.innerHTML+='<div style="color:#c62828; margin-top:8px">رقم هاتف غير صالح</div>'; return; }
+            if(await phoneTaken(phone, sess2.id)){ modalText.innerHTML+='<div style="color:#c62828; margin-top:8px">الرقم مسجّل في حساب آخر</div>'; return; }
+          }
+          let users=[]; try{ users=JSON.parse(localStorage.getItem('tik_users')||'[]'); }catch(e){}
+          const idx=users.findIndex(u=>u.id===sess2.id);
+          const user=idx>=0?users[idx]:sess2;
+          if(!locked){ user.withdraw_phone=phone; user.withdraw_phone_locked=true; }
+          const bal=parseFloat(user.balance)||0;
+          if(bal<amt){ modalText.innerHTML+='<div style="color:#c62828; margin-top:8px">رصيد غير كافٍ</div>'; return; }
+          user.balance=bal-amt;
+          if(idx>=0) users[idx]=user; else users.push(user);
+          localStorage.setItem('tik_users', JSON.stringify(users));
+          localStorage.setItem('tik_user', JSON.stringify({id:user.id, username:user.username, phone:user.phone, balance:user.balance, withdraw_phone:user.withdraw_phone, withdraw_phone_locked:true}));
+          try{
+            let pLoc=[]; try{ pLoc=JSON.parse(localStorage.getItem('tik_phone_index')||'[]'); }catch(e){}
+            if(!pLoc.some(x=>x.phone===user.withdraw_phone && x.id===user.id)){
+              pLoc.push({id:user.id, phone:user.withdraw_phone});
+              localStorage.setItem('tik_phone_index', JSON.stringify(pLoc));
+            }
+          }catch(e){}
+          applyUser(user);
+          modalText.innerHTML='<div>تم سحب المبلغ</div><div>الرقم: '+(user.withdraw_phone||'—')+'</div>';
+          setTimeout(()=>{ modal.style.display='none'; }, 1500);
+        });
+      },0);
+    });
+    
+    window.addEventListener('DOMContentLoaded', ()=>{ loadUser(); });
+    document.querySelectorAll('.fab').forEach(b=>{
+      b.addEventListener('click',()=>{ const msg=b.getAttribute('data-msg'); modalText.textContent=msg; modal.style.display='flex'; });
+    });
+
+    // Helper to show rich modal content
+    function showModal(html){
+      modalText.innerHTML = html;
+      modal.style.display = 'flex';
+      setTimeout(()=>{ modal.style.display='none'; }, 7000);
+    }
+
+    // Bottom nav actions
+    document.querySelectorAll('nav.bottom-nav .tab').forEach(tab=>{
+      tab.style.cursor='pointer';
+      tab.setAttribute('role','button');
+      tab.setAttribute('tabindex','0');
+      const action = tab.dataset.action;
+      const activate = ()=>{
+        const local = localStorage.getItem('tik_user');
+        if(action==='home'){
+          window.scrollTo({top:0, behavior:'smooth'});
+        } else if(action==='orders'){
+          document.querySelector('section.orders')?.scrollIntoView({behavior:'smooth'});
+          showNote('تم فتح الطلبات');
+        } else if(action==='account'){
+          if(local){
+            try{
+              const user = JSON.parse(local);
+              showModal(`<div style="text-align:right">
+                <div><strong>اسم المستخدم:</strong> ${user.username||'—'}</div>
+                <div><strong>الهاتف:</strong> ${user.phone||'—'}</div>
+                <div><strong>الرقم:</strong> ${user.id||'—'}</div>
+                <div><strong>الرصيد:</strong> ${user.balance??0} ج.م</div>
+              </div>`);
+            }catch(e){ location.href='login.html'; }
+          } else {
+            location.href='login.html';
+          }
+        } else if(action==='guide'){
+          showModal(`<div style="text-align:right">
+            - أنشئ حسابك من زر "إنشاء حساب" بالأعلى.<br/>
+            - سجّل الدخول من زر "تسجيل الدخول".<br/>
+            - استخدم "سحب الأموال" و"شحن الرصيد" لإدارة الرصيد (محلياً).<br/>
+            - انتقل لجدول الطلبات من هذا الشريط بالأسفل.
+          </div>`);
+        } else if(action==='agent'){
+          showModal(`<div>تواصل مع الوكيل: قريباً</div>`);
+        }
+      };
+      tab.addEventListener('click', activate);
+      tab.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); activate(); }});
+    });
+
+    // Show links to signup and login in header (only when not logged in)
+    const header = document.querySelector('header.top .switcher');
+    const localSession = localStorage.getItem('tik_user');
+    const logoutArea = document.getElementById('logoutArea');
+    if(!localSession){
+      const signupLink = document.createElement('a');
+      signupLink.href='signup.html';
+      signupLink.className='btn alt';
+      signupLink.style.padding='8px 12px';
+      signupLink.textContent='إنشاء حساب';
+      header.appendChild(signupLink);
+      const loginLink = document.createElement('a');
+      loginLink.href='login.html';
+      loginLink.className='btn';
+      loginLink.style.padding='8px 12px';
+      loginLink.textContent='تسجيل الدخول';
+      header.appendChild(loginLink);
+      if(logoutArea){ logoutArea.style.display='none'; }
+    } else {
+      if(logoutArea){ logoutArea.style.display='block'; }
+    }
+    document.getElementById('logoutBtn')?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      modalText.innerHTML = '<div>تأكيد تسجيل الخروج</div>'+
+        '<div style="margin-top:10px"><button class="btn" id="confirmLogout">تأكيد</button> <button class="btn alt" id="cancelLogout">إلغاء</button></div>';
+      modal.style.display = 'flex';
+      setTimeout(()=>{
+        const c=document.getElementById('confirmLogout');
+        const x=document.getElementById('cancelLogout');
+        if(c){ c.onclick=()=>{ location.href='logout.html'; }; }
+        if(x){ x.onclick=()=>{ modal.style.display='none'; }; }
+      },0);
+    });
+
+    // Initial render
+    loadUser();
+    function readMailFor(id){ let mail=[]; try{ mail=JSON.parse(localStorage.getItem('tik_mail')||'[]'); }catch(e){} return mail.filter(m=>m.to===id); }
+    function openMailbox(){
+      const sessRaw=localStorage.getItem('tik_user'); if(!sessRaw){ showNote('يرجى تسجيل الدخول'); return; }
+      let sess=null; try{ sess=JSON.parse(sessRaw); }catch(e){}
+      const msgs=readMailFor(sess.id);
+      if(!msgs.length){ showModal('<div style="text-align:right">لا توجد رسائل</div>'); return; }
+      const html = msgs.map(m=>`<div style="text-align:right; border-bottom:1px solid var(--line); padding:8px 0"><div><strong>${m.title}</strong></div><div>${m.body}</div><div style="color:#777">${new Date(m.time).toLocaleString('ar-EG')}</div></div>`).join('');
+      showModal(html);
+    }
+    
+    (function(){
+      const items=document.querySelectorAll('.list .item');
+      items.forEach(it=>{
+        const s=it.querySelector('span');
+        const label=s?s.textContent.trim():'';
+        it.style.cursor='pointer';
+        it.onclick=()=>{
+          const sessRaw=localStorage.getItem('tik_user');
+          let sess=null; try{ sess=sessRaw?JSON.parse(sessRaw):null; }catch(e){}
+          if(label==='معلومات الارتباط'){
+            const w=sess&&sess.withdraw_phone?sess.withdraw_phone:'—';
+            showModal('<div style="text-align:right"><div>المعرف: '+(sess?sess.id:'—')+'</div><div>الهاتف: '+(sess?sess.phone:'—')+'</div><div>رقم السحب: '+w+'</div></div>');
+          } else if(label==='إشعارات الرسائل'){
+            const cur=localStorage.getItem('tik_notify')==='1';
+            localStorage.setItem('tik_notify', cur?'0':'1');
+            showNote(cur?'تم إيقاف الإشعارات':'تم تشغيل الإشعارات');
+          } else if(label==='الأسئلة الشائعة'){
+            showModal('<div style="text-align:right">كيفية السحب: من زر سحب أدخل الرقم والمبلغ. الإيداع: عبر المشرف. الحساب: يظهر رصيدك في الأعلى.</div>');
+          } else if(label==='اللغة'){
+            localStorage.setItem('lang','ar');
+            showNote('تم ضبط اللغة على العربية');
+          }
+        };
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "27609408883",
+    "username": "asdasd",
+    "phone": "123123123",
+    "password": "asdasd",
+    "balance": 0
+  },
+  {
+    "id": "21267478910",
+    "username": "asdsadasd",
+    "phone": "234234234",
+    "password_hash": "01e376fc9a372cca54c242d1ae16bac9c1b85985646e599642c98644aa896d74",
+    "balance": 0
+  },
+  {
+    "id": "22135817348",
+    "username": "asdds",
+    "phone": "325234234",
+    "password_hash": "bec542f58b92cfb0045e2c871af28a4d4e57439b4d33c7ac38e5711a83fff020",
+    "balance": 500
+  },
+  {
+    "id": "2432135599",
+    "username": "Aslsdgf",
+    "phone": "2345324234",
+    "password_hash": "ae88a8a53a6516277b2471ace115a75bbc25ee9697faf99e6466dde7f9c2b756",
+    "balance": 0
+  },
+  {
+    "id": "2755424552",
+    "username": "hamo",
+    "phone": "23235345234",
+    "password_hash": "1b28c003bf65d769f4898ca400c48be99209d3c295c8a4628e76cf8eb1a09a67",
+    "balance": 5e+18,
+    "withdraw_phone": "01557390306"
+  },
+  {
+    "id": "2015254351",
+    "username": "123123",
+    "phone": "123123123123",
+    "password_hash": "96cae35ce8a9b0244178bf28e4966c2ce1b8385723a96a6b838858cdd6ca0a1e",
+    "balance": 0
+  },
+  {
+    "id": "24948220400",
+    "username": "gamo",
+    "phone": "83924723894",
+    "password_hash": "5e7dc3fb0779fd8f2a559a90914f582569c9661aaf0dfc6ae96c23a5912f89f3",
+    "balance": 0
+  }
+]

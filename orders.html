@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>مركز الطلبات — TikShop Mock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#fff6e0; --accent:#ffc107; --accent2:#ff9800; --line:#e9c45c; }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:'Cairo', system-ui, sans-serif; background:linear-gradient(180deg,var(--bg) 0%, #ffd26a 100%); color:#222;}
+    .container{max-width:980px; margin:0 auto; padding:16px;}
+    header.top{display:flex; align-items:center; justify-content:space-between; padding:10px 12px;}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:700;}
+    .logo{width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#000; color:#fff; font-size:14px}
+
+    .card{background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:0 8px 26px rgba(0,0,0,0.08); overflow:hidden}
+    .card-head{padding:14px; background:linear-gradient(90deg,var(--accent) 0%, var(--accent2) 100%); color:#111;}
+    .section{padding:14px}
+    .field{margin:8px 0; text-align:right}
+    .field label{display:block; margin-bottom:6px}
+    .field input{width:100%; padding:10px; border:1px solid var(--line); border-radius:10px}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    .btn{background:var(--accent); color:#111; border:none; padding:12px; border-radius:10px; font-weight:700; cursor:pointer; width:100%}
+    .btn.alt{background:#fff; border:2px solid var(--accent2)}
+    .note{color:#555; font-size:13px}
+    .status{padding:6px 10px; border-radius:999px; font-size:12px}
+    .s-pending{background:#fff3cd} .s-paid{background:#d1ffc9} .s-cancel{background:#ffd4d4}
+    .bottom-nav{position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); display:flex; justify-content:space-around; padding:8px}
+    .tab{display:flex; flex-direction:column; align-items:center; gap:2px; color:#444; font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">♪</div>
+        <div>Amazon Shop</div>
+      </div>
+      <div class="note"><a href="index.html">الرجوع للرئيسية</a></div>
+    </header>
+
+    <section class="card" aria-label="سجل المعاملات">
+      <div class="card-head" style="color:#111">سجل المعاملات</div>
+      <div class="section">
+        <table id="txTable" style="width:100%; border-collapse:collapse">
+          <thead><tr><th>الاسم</th><th>النوع</th><th>المبلغ</th><th>الحالة</th><th>الوقت</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+
+  </div>
+
+  <nav class="bottom-nav" aria-label="التنقل">
+    <a class="tab" href="index.html" title="الرئيسية">🏠<div>الرئيسية</div></a>
+    <a class="tab" href="mail.html" title="البريد">✉️<div>البريد</div></a>
+    <a class="tab" href="sign.html" title="التوقيع">✍️<div>التوقيع</div></a>
+    <a class="tab" href="orders.html" title="طلبات">📦<div>طلبات</div></a>
+  </nav>
+
+  <script>
+    // عمليات شكلية فقط
+    function showOK(el, msg){ el.textContent = msg; el.style.color = '#2e7d32'; }
+    function showErr(el, msg){ el.textContent = msg; el.style.color = '#c62828'; }
+
+
+
+    (function(){
+      const names = ['Michael','David','John','Chris','James','Robert','Daniel','Mark','Andrew','Paul','Sarah','Emma','Olivia','Sophia','Emily','Liam','Noah','William','Benjamin','Lucas'];
+      const types = ['سحب','إيداع'];
+      const statuses = ['قيد المعالجة','تم'];
+      function fmtAmt(a){ return (Math.round(a*100)/100).toFixed(2)+' ج.م'; }
+      function nowStr(){ const d=new Date(); return d.toLocaleString('ar-EG'); }
+      function maskHalf(name){ const keep=Math.ceil(name.length/2); return name.slice(0,keep) + '*'.repeat(name.length-keep); }
+      function gen(i){
+        const name = names[Math.floor(Math.random()*names.length)];
+        const type = types[Math.floor(Math.random()*types.length)];
+        const amt = Math.random()<0.5 ? (50+Math.random()*450) : (500+Math.random()*5000);
+        const st = statuses[Math.random()<0.7?0:1];
+        return {id: 2000+i, name, type, amount: amt, status: st, time: nowStr()};
+      }
+      let list = Array.from({length:10}, (_,i)=>gen(i));
+      function badge(st){ const cls = st==='تم'?'s-paid':'s-pending'; return '<span class="status '+cls+'">'+st+'</span>'; }
+      function render(){
+        const tb = document.querySelector('#txTable tbody');
+        tb.innerHTML = list.map(r=>`<tr><td>${maskHalf(r.name)}</td><td>${r.type}</td><td>${fmtAmt(r.amount)}</td><td>${badge(r.status)}</td><td>${r.time}</td></tr>`).join('');
+      }
+      render();
+      setInterval(()=>{
+        for(let k=0;k<3;k++){
+          const i = Math.floor(Math.random()*list.length);
+          const r = list[i];
+          r.status = statuses[Math.random()<0.5?0:1];
+          r.amount = r.type==='إيداع' ? (500+Math.random()*5000) : (50+Math.random()*450);
+          r.time = nowStr();
+        }
+        render();
+      }, 5000);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تسجيل الدخول — TikShop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#f4f7ff; --accent:#3f51b5; --line:#d9def5; }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:'Cairo', system-ui, sans-serif; background:linear-gradient(180deg,#ffffff 0%, var(--bg) 100%); color:#222;}
+    .container{max-width:520px; margin:40px auto; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,0.08); overflow:hidden}
+    header{padding:16px; background:var(--accent); color:#fff; font-weight:700}
+    .content{padding:18px}
+    label{display:block; margin:12px 0 6px}
+    input{width:100%; padding:10px; border:1px solid var(--line); border-radius:10px}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .btn{margin-top:12px; background:var(--accent); color:#fff; border:none; padding:12px; border-radius:10px; width:100%; font-weight:700; cursor:pointer}
+    .note{margin-top:10px; font-size:13px; color:#666}
+    .error{color:#d32f2f; font-size:13px; margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>تسجيل الدخول</header>
+    <div class="content">
+      <div class="row">
+        <div>
+          <label>اسم المستخدم</label>
+          <input id="username" />
+        </div>
+      </div>
+      <label>كلمة المرور</label>
+      <input id="password" type="password" />
+      <div id="err" class="error" style="display:none"></div>
+      <button class="btn" id="login">دخول</button>
+      <div id="swapNote" class="note">ليس لديك حساب؟ <a href="signup.html">إنشاء حساب</a></div>
+    </div>
+  </div>
+
+  <script>
+    // إذا كنت مسجل دخول بالفعل، أخفِ روابط الإنشاء/التبديل
+    (function(){
+      try{
+        const local = localStorage.getItem('tik_user');
+        if(local){
+          const u = JSON.parse(local);
+          if(u && (u.username || u.id)){
+            const el = document.getElementById('swapNote');
+            if(el) el.style.display='none';
+          }
+        }
+      }catch(e){}
+    })();
+    const elU = document.getElementById('username');
+    const elPw = document.getElementById('password');
+    const err = document.getElementById('err');
+
+    function simpleHash(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h*31 + str.charCodeAt(i))>>>0; } return h.toString(16).padStart(64,'0'); }
+    async function sha256Hex(str){
+      try{
+        if(window.crypto && crypto.subtle){
+          const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+          return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+        }
+      }catch(e){}
+      return simpleHash(str);
+    }
+    async function clientLogin(username, password){
+      const hash = await sha256Hex(password);
+      let remote = [];
+      try{ const res = await fetch('users.json'); if(res.ok) remote = await res.json(); }catch(e){}
+      let locals = [];
+      try{ locals = JSON.parse(localStorage.getItem('tik_users')||'[]'); }catch(e){}
+      const all = remote.concat(locals);
+      const user = all.find(u=>u.username && u.username.toLowerCase()===username.toLowerCase());
+      if(!user) return {ok:false, status:404, json:{error:'user_not_found'}};
+      if(user.password_hash !== hash) return {ok:false, status:401, json:{error:'invalid_password'}};
+      return {ok:true, status:200, json:{id:user.id, username:user.username, phone:user.phone, balance:user.balance||0}};
+    }
+    async function postJson(url, data){
+      try{
+        const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+        const json = await res.json();
+        return {ok: res.ok, status: res.status, json};
+      }catch(e){
+        return {ok:false, status:0, json:{error:'network_error'}};
+      }
+    }
+
+    const reUser = /^[A-Za-z0-9]{3,20}$/;
+    const rePw = /^[A-Za-z0-9]{6,14}$/;
+
+    document.getElementById('login').onclick = async ()=>{
+      const username = elU.value.trim();
+      const password = elPw.value.trim();
+      err.style.display='none';
+
+      // الدخول إلى صفحة الأدمن عبر كلمة/باسورد مخصوصين
+      if(username.toLowerCase()==='admin' && password==='h12345'){
+        try{ localStorage.setItem('tik_admin','1'); }catch(e){}
+        window.location.href = 'admin.html';
+        return;
+      }
+  
+      if(!reUser.test(username)){ err.textContent='اسم المستخدم يجب أن يكون بحروف انجليزية وأرقام فقط (3–20).'; err.style.display='block'; return; }
+      if(!rePw.test(password)){ err.textContent='كلمة المرور يجب أن تكون حروف إنجليزية وأرقام بطول 6 إلى 14.'; err.style.display='block'; return; }
+  
+      try{
+        // حاول أولاً عبر الخادم، وإن فشل سنجرب تسجيل الدخول محلياً (GitHub Pages)
+        let res = await postJson('/api/login', {username, password});
+        if(!res.ok){
+          const localRes = await clientLogin(username, password);
+          res = localRes;
+        }
+        const {ok, json} = res;
+        if(!ok){
+          const map = {
+            user_not_found:'الحساب غير موجود',
+            invalid_password:'كلمة المرور غير صحيحة',
+            missing_credentials:'يرجى إدخال اسم المستخدم',
+            network_error:'تعذر الاتصال بالخادم'
+          };
+          err.textContent = map[json.error] || 'خطأ في تسجيل الدخول';
+          err.style.display='block';
+          return;
+        }
+        localStorage.setItem('tik_user', JSON.stringify(json));
+        window.location.href = 'index.html';
+      }catch(e){
+        err.textContent = 'حدث خطأ داخلي أثناء تسجيل الدخول';
+        err.style.display='block';
+      }
+    };
+  </script>
+</body>
+</html>

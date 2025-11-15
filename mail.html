@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>البريد — TikShop Mock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#fff6e0; --accent:#ffc107; --accent2:#ff9800; --line:#e9c45c; }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:'Cairo', system-ui, sans-serif; background:linear-gradient(180deg,var(--bg) 0%, #ffd26a 100%); color:#222;}
+    .container{max-width:980px; margin:0 auto; padding:16px;}
+    header.top{display:flex; align-items:center; justify-content:space-between; padding:10px 12px;}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:700;}
+    .logo{width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#000; color:#fff; font-size:14px}
+    .card{background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:0 8px 26px rgba(0,0,0,0.08); overflow:hidden}
+    .card-head{padding:14px; background:linear-gradient(90deg,var(--accent) 0%, var(--accent2) 100%); color:#111;}
+    .section{padding:14px}
+    .msg{border-bottom:1px solid var(--line); padding:10px 0}
+    .msg:last-child{border-bottom:none}
+    .title{font-weight:700}
+    .time{color:#777; font-size:12px}
+    .empty{padding:12px; text-align:center; color:#555}
+    .bottom-nav{position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); display:flex; justify-content:space-around; padding:8px}
+    .tab{display:flex; flex-direction:column; align-items:center; gap:2px; color:#444; font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">♪</div>
+        <div>Amazon Shop</div>
+      </div>
+      <div><a href="index.html">الرجوع للرئيسية</a></div>
+    </header>
+
+    <section class="card" aria-label="البريد">
+      <div class="card-head">البريد</div>
+      <div class="section" id="mailList"></div>
+    </section>
+  </div>
+
+  <nav class="bottom-nav" aria-label="التنقل">
+    <a class="tab" href="index.html" title="الرئيسية">🏠<div>الرئيسية</div></a>
+    <a class="tab" href="mail.html" title="البريد">✉️<div>البريد</div></a>
+    <a class="tab" href="sign.html" title="التوقيع">✍️<div>التوقيع</div></a>
+    <a class="tab" href="orders.html" title="طلبات">📦<div>طلبات</div></a>
+  </nav>
+
+  <script>
+    function readAll(){ let mail=[]; try{ mail=JSON.parse(localStorage.getItem('tik_mail')||'[]'); }catch(e){} return mail; }
+    function readMailFor(id){ return readAll().filter(m=>m.to===id); }
+    function findUser(id){
+      let locals=[]; try{ locals=JSON.parse(localStorage.getItem('tik_users')||'[]'); }catch(e){}
+      const u = locals.find(x=>x.id===id);
+      return u||null;
+    }
+    function saveUser(user){
+      let locals=[]; try{ locals=JSON.parse(localStorage.getItem('tik_users')||'[]'); }catch(e){}
+      const i = locals.findIndex(x=>x.id===user.id);
+      if(i>=0) locals[i]=user; else locals.push(user);
+      try{ localStorage.setItem('tik_users', JSON.stringify(locals)); }catch(e){}
+      const sessRaw=localStorage.getItem('tik_user');
+      if(sessRaw){ try{ const sess=JSON.parse(sessRaw); if(sess.id===user.id){ localStorage.setItem('tik_user', JSON.stringify({id:user.id, username:user.username, phone:user.phone, balance:user.balance, withdraw_phone:user.withdraw_phone, withdraw_phone_locked:user.withdraw_phone_locked, signatureApproved:user.signatureApproved})); } }catch(e){} }
+    }
+    function pushMail(to, title, body){
+      let mail=[]; try{ mail=JSON.parse(localStorage.getItem('tik_mail')||'[]'); }catch(e){}
+      mail.push({to, title, body, time:new Date().toISOString()});
+      try{ localStorage.setItem('tik_mail', JSON.stringify(mail)); }catch(e){}
+    }
+    function render(){
+      const el = document.getElementById('mailList');
+      
+      const s = localStorage.getItem('tik_user');
+      if(!s){ el.innerHTML = '<div class="empty">يرجى تسجيل الدخول أولاً</div>'; return; }
+      let u=null; try{ u=JSON.parse(s); }catch(e){ el.innerHTML='<div class="empty">خطأ في الجلسة</div>'; return; }
+      let list = readMailFor(u.id);
+      list = list.filter(m=>{
+        const t=m.title||'';
+        return t.includes('مكافأة') || t==='تم تحويل المبلغ' || t.startsWith('تم رفض التحويل') || t==='تم الإيداع' || t.includes('تم الإيداع');
+      });
+      if(!list.length){ el.innerHTML = '<div class="empty">لا توجد رسائل</div>'; return; }
+      el.innerHTML = list.map(m=>`<div class="msg"><div class="title">${m.title}</div><div>${m.body}</div><div class="time">${new Date(m.time).toLocaleString('ar-EG')}</div></div>`).join('');
+    }
+    render();
+  </script>
+</body>
+</html>

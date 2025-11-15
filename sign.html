@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>التوقيع — TikShop Mock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#fff6e0; --bg-2:#ffd26a; --text:#2c2c2c; --muted:#7d7d7d;
+      --accent:#ffc107; --accent-2:#ff9800; --card:#ffffff; --line:#e9c45c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:'Cairo', system-ui, sans-serif; background:linear-gradient(180deg,var(--bg) 0%, var(--bg-2) 100%); color:var(--text);}    
+    .container{max-width:980px; margin:0 auto; padding:16px;}
+    header.top{display:flex; align-items:center; justify-content:space-between; padding:10px 12px;}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:700;}
+    .logo{width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#000; color:#fff; font-size:14px}
+    .switcher{display:flex; gap:8px}
+
+    .alert{background:#ffa000; color:#111; padding:12px; border-radius:10px; border:1px solid var(--line); text-align:center; margin:10px 0}
+    h2{margin:16px 0}
+
+    .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px}
+    .card{background:var(--card); border-radius:14px; box-shadow:0 8px 26px rgba(0,0,0,0.08); overflow:hidden; border:1px solid var(--line); padding:12px}
+    .card .title{font-weight:700; font-size:18px; margin-bottom:6px}
+    .meta{display:flex; align-items:center; gap:10px; color:#555}
+    .desc{color:#555; margin:8px 0}
+    .btn{background:var(--accent); color:#111; border:none; padding:10px 12px; border-radius:10px; font-weight:700; cursor:pointer; width:100%}
+
+    .bottom-nav{position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); display:flex; justify-content:space-around; padding:8px}
+    .tab{display:flex; flex-direction:column; align-items:center; gap:2px; color:#444; font-size:12px}
+
+    .modal{position:fixed; inset:0; background:rgba(0,0,0,0.35); display:none; align-items:center; justify-content:center}
+    .modal .box{background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; width:92%; max-width:420px; text-align:center}
+    .close{margin-top:10px; background:#eee; border:1px solid var(--line); padding:8px 12px; border-radius:10px; cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">♪</div>
+        <div>Amazon Shop</div>
+      </div>
+      <div class="switcher" aria-label="روابط">
+        <!-- سيتم إضافة روابط إنشاء/تسجيل فقط إذا لم تكن مسجلاً -->
+      </div>
+    </header>
+
+    <div class="alert">لا توجد معلومات عن التوقيع حالياً</div>
+    <h2>جميع التجار</h2>
+
+    <div class="grid" id="merchants"></div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav" aria-label="التنقل">
+    <a class="tab" href="index.html" title="الرئيسية">🏠<div>الرئيسية</div></a>
+    <a class="tab" href="mail.html" title="البريد">✉️<div>البريد</div></a>
+    <a class="tab" href="sign.html" title="التوقيع">✍️<div>التوقيع</div></a>
+    <a class="tab" href="orders.html" title="طلبات">📦<div>طلبات</div></a>
+  </nav>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="box">
+      <div id="modalText">إشعار</div>
+      <button class="close" id="closeModal">إغلاق</button>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('modal');
+    const modalText = document.getElementById('modalText');
+    document.getElementById('closeModal').onclick = ()=> modal.style.display='none';
+    function showNote(msg){ modalText.textContent = msg; modal.style.display='flex'; setTimeout(()=>{ modal.style.display='none'; }, 3500); }
+
+    // إضافة روابط أعلى الصفحة فقط إذا لم تكن مسجلاً
+    (function(){
+      const header = document.querySelector('header.top .switcher');
+      const localSession = localStorage.getItem('tik_user');
+      if(!localSession){
+        const signupLink = document.createElement('a');
+        signupLink.href='signup.html';
+        signupLink.className='btn';
+        signupLink.style.padding='8px 12px';
+        signupLink.textContent='إنشاء حساب';
+        header.appendChild(signupLink);
+        const loginLink = document.createElement('a');
+        loginLink.href='login.html';
+        loginLink.className='btn';
+        loginLink.style.padding='8px 12px';
+        loginLink.textContent='تسجيل الدخول';
+        header.appendChild(loginLink);
+      }
+    })();
+
+    // بيانات التجار (نماذج)
+    const data = [
+      {name:'Business', price:'E80E', min:'الحد الأدنى', stars:'☆☆☆☆☆', desc:'منصة تجارة إلكترونية للبيع المباشر للمستهلك (DTC).'},
+      {name:'Bonanza', price:'E80E', min:'الحد الأدنى', stars:'☆☆☆★☆', desc:'منصة تجارة إلكترونية سهلة للمُورِّد والبائع.'},
+      {name:'Cratejoy', price:'E80E', min:'الحد الأدنى', stars:'★★☆☆☆', desc:'منصة اشتراكات تقدّم خدمة متكاملة.'},
+      {name:'Flubit', price:'E300E', min:'الحد الأدنى', stars:'★★★★★', desc:'سوق يضم ملايين المنتجات وأسعار تنافسية.'}
+    ];
+
+    const wrap = document.getElementById('merchants');
+    (function(){
+      let sess=null; try{ const s=localStorage.getItem('tik_user'); if(s) sess=JSON.parse(s); }catch(e){}
+      let approved=false; if(sess && sess.signatureApproved===true) approved=true; else {
+        try{ const locals=JSON.parse(localStorage.getItem('tik_users')||'[]'); const u=locals.find(x=>x.id===sess?.id); approved = !!(u && u.signatureApproved===true); }catch(e){}
+      }
+      if(approved){
+        const alertEl = document.querySelector('.alert'); if(alertEl) alertEl.textContent='سوق البيع متاح. المكسب بعد المهمات: 100 ج.م';
+        const items = [
+          {name:'ثلاجة 12 قدم', img:'https://images.unsplash.com/photo-1567731802848-1480b36dfbea?w=400', profit:100, desc:'ثلاجة موفرة للطاقة'},
+          {name:'غسالة أوتوماتيك', img:'https://images.unsplash.com/photo-1581578018793-6c7c65f09a37?w=400', profit:100, desc:'غسالة بسعة 7 كجم'},
+          {name:'ميكروويف', img:'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400', profit:100, desc:'ميكروويف سريع ومتعدد البرامج'}
+        ];
+        wrap.innerHTML='';
+        items.forEach(it=>{
+          const card=document.createElement('div'); card.className='card';
+          card.innerHTML = `
+            <div class="title">${it.name}</div>
+            <div class="meta">المكسب بعد المهمات: ${it.profit} ج.م</div>
+            <div class="desc">${it.desc}</div>
+            <img src="${it.img}" alt="${it.name}" style="width:100%; border-radius:10px; margin:8px 0"/>
+            <button class="btn">شراء بالعقد</button>
+          `;
+          const btn=card.querySelector('.btn');
+          btn.addEventListener('click',()=>{ showNote('تم إنشاء مهمة شراء: '+it.name+'، المكسب بعد إكمال المهمات: '+it.profit+' ج.م'); });
+          wrap.appendChild(card);
+        });
+        return;
+      }
+      data.forEach(m=>{
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="title">${m.name}</div>
+          <div class="meta">${m.price} · ${m.min}</div>
+          <div class="meta" aria-label="التقييم">${m.stars}</div>
+          <div class="desc">${m.desc}</div>
+          <button class="btn">التوقيع</button>
+        `;
+        const btn = card.querySelector('.btn');
+        btn.addEventListener('click', ()=>{
+          const local = localStorage.getItem('tik_user');
+          if(!local){ showNote('يرجى تسجيل الدخول أولاً'); return; }
+          modalText.innerHTML = 'لم يتم التوقيع العقد مع المشرف'+
+            '<div style="margin-top:10px"><button class="btn" id="confirmSign">تأكيد</button></div>';
+          modal.style.display = 'flex';
+          setTimeout(()=>{
+            const c = document.getElementById('confirmSign');
+            if(c){ c.onclick = ()=>{ modal.style.display='none'; window.open('https://wa.me/201212738757','_blank'); }; }
+          },0);
+        });
+        wrap.appendChild(card);
+      });
+    })();
+  </script>
+</body>
+</html>
